@@ -26,7 +26,7 @@ export class UsersService {
     const newUser = new UserEntity({
       id: uuidv4(),
       ...createUserDto,
-      version: 0,
+      version: 1,
       createdAt: Date.now(),
       updatedAt: Date.now(),
     });
@@ -53,7 +53,7 @@ export class UsersService {
   delete(id): UserEntity {
     const index = this.users.findIndex((user) => user.id === id);
 
-    if (index) throw new NotFoundException();
+    if (index === -1) throw new NotFoundException();
 
     return this.users.splice(index, 1)[0];
   }
