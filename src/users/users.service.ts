@@ -55,8 +55,6 @@ export class UsersService {
 
     if (index) throw new NotFoundException();
 
-    this.users.splice(index, 1);
-
-    return this.users[index];
+    return this.users.splice(index, 1)[0];
   }
 }
