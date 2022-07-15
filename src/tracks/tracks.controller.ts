@@ -4,6 +4,7 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
   Param,
   ParseUUIDPipe,
   Post,
@@ -46,6 +47,7 @@ export class TracksController {
   }
 
   @Delete(':id')
+  @HttpCode(204)
   deleteTrack(@Param('id', new ParseUUIDPipe({ version: '4' })) id: string) {
     return this.usersServices.delete(id);
   }

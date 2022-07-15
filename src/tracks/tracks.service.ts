@@ -1,8 +1,4 @@
-import {
-  ForbiddenException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateTrackDto } from './dto/create-track.dto';
 import { v4 as uuidv4 } from 'uuid';
 import { TrackEntity } from './entity/track.entity';
@@ -10,41 +6,41 @@ import { UpdateTrackDto } from './dto/update-track.dto';
 
 @Injectable()
 export class TracksService {
-  private tracks: TrackEntity[] = [];
+  public static tracks: TrackEntity[] = [];
 
   getAll(): Array<TrackEntity> {
-    return this.tracks;
+    return TracksService.tracks;
   }
 
   getOne(id: string): TrackEntity {
-    const user = this.tracks.find((user) => user.id === id);
-    if (!user) throw new NotFoundException();
-    return user;
+    const track = TracksService.tracks.find((track) => track.id === id);
+    if (!track) throw new NotFoundException();
+    return track;
   }
 
   create(createTrackDto: CreateTrackDto): TrackEntity {
-    const newUser = new TrackEntity({ id: uuidv4(), ...createTrackDto });
+    const newTrack = new TrackEntity({ id: uuidv4(), ...createTrackDto });
 
-    this.tracks.push(newUser);
+    TracksService.tracks.push(newTrack);
 
-    return newUser;
+    return newTrack;
   }
 
   update(id, updateTrackDto: UpdateTrackDto): TrackEntity {
-    let updatedUser = this.tracks.find((user) => user.id === id);
+    let updatedTrack = TracksService.tracks.find((user) => user.id === id);
 
-    if (!updatedUser) throw new NotFoundException();
+    if (!updatedTrack) throw new NotFoundException();
 
-    updatedUser = Object.assign(updatedUser, updateTrackDto);
+    updatedTrack = Object.assign(updatedTrack, updateTrackDto);
 
-    return updatedUser;
+    return updatedTrack;
   }
 
   delete(id): TrackEntity {
-    const index = this.tracks.findIndex((user) => user.id === id);
+    const index = TracksService.tracks.findIndex((user) => user.id === id);
 
-    if (index) throw new NotFoundException();
+    if (index === -1) throw new NotFoundException();
 
-    return this.tracks.splice(index, 1)[0];
+    return TracksService.tracks.splice(index, 1)[0];
   }
 }
