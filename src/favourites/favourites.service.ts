@@ -1,4 +1,6 @@
 import {
+  forwardRef,
+  Inject,
   Injectable,
   NotFoundException,
   UnprocessableEntityException,
@@ -11,12 +13,15 @@ import { TracksService } from '../tracks/tracks.service';
 @Injectable()
 export class FavouritesService {
   constructor(
+    @Inject(forwardRef(() => AlbumsService))
     private albumsServices: AlbumsService,
+    @Inject(forwardRef(() => ArtistsService))
     private artistsServices: ArtistsService,
+    @Inject(forwardRef(() => TracksService))
     private tracksServices: TracksService,
   ) {}
 
-  public static favourites: Favorites = {
+  public favourites: Favorites = {
     artists: [],
     albums: [],
     tracks: [],
@@ -24,74 +29,75 @@ export class FavouritesService {
 
   getAll() {
     return {
-      artists: FavouritesService.favourites.artists.map((id) =>
-        this.artistsServices.getOne(id),
-      ),
-      albums: FavouritesService.favourites.albums.map((id) =>
-        this.albumsServices.getOne(id),
-      ),
-      tracks: FavouritesService.favourites.tracks.map((id) =>
-        this.tracksServices.getOne(id),
-      ),
+      artists: this.favourites.artists.map((id) => {
+        if (this.artistsServices.artists.find((item) => item.id === id)) {
+          return this.artistsServices.getOne(id);
+        }
+      }),
+      albums: this.favourites.albums.map((id) => {
+        if (this.albumsServices.albums.find((item) => item.id === id)) {
+          return this.albumsServices.getOne(id);
+        }
+      }),
+      tracks: this.favourites.tracks.map((id) => {
+        if (this.tracksServices.tracks.find((item) => item.id === id)) {
+          return this.tracksServices.getOne(id);
+        }
+      }),
     };
   }
 
   addTrack(id) {
-    const track = TracksService.tracks.find((item) => item.id === id);
+    const track = this.tracksServices.tracks.find((item) => item.id === id);
 
     if (!track) throw new UnprocessableEntityException();
 
-    FavouritesService.favourites.tracks.push(id);
+    this.favourites.tracks.push(id);
 
     return track;
   }
 
   deleteTrack(id) {
-    const index = FavouritesService.favourites.tracks.findIndex(
-      (trackId) => trackId === id,
-    );
+    const index = this.favourites.tracks.findIndex((trackId) => trackId === id);
 
     if (index === -1) throw new NotFoundException();
 
-    return FavouritesService.favourites.tracks.splice(index, 1);
+    return this.favourites.tracks.splice(index, 1);
   }
 
   addAlbum(id) {
-    const album = AlbumsService.albums.find((item) => item.id === id);
+    const album = this.albumsServices.albums.find((item) => item.id === id);
 
     if (!album) throw new UnprocessableEntityException();
 
-    FavouritesService.favourites.albums.push(id);
+    this.favourites.albums.push(id);
 
     return album;
   }
 
   deleteAlbum(id) {
-    const index = FavouritesService.favourites.albums.findIndex(
-      (trackId) => trackId === id,
-    );
+    const index = this.favourites.albums.findIndex((trackId) => trackId === id);
 
     if (index === -1) throw new NotFoundException();
 
-    return FavouritesService.favourites.albums.splice(index, 1)[0];
+    return this.favourites.albums.splice(index, 1)[0];
   }
 
   addArtist(id) {
-    const artist = ArtistsService.artists.find((item) => item.id === id);
+    const artist = this.artistsServices.artists.find((item) => item.id === id);
 
     if (!artist) throw new UnprocessableEntityException();
 
-    FavouritesService.favourites.artists.push(id);
+    this.favourites.artists.push(id);
 
     return artist;
   }
 
   deleteArtist(id) {
-    const index = FavouritesService.favourites.artists.findIndex(
+    const index = this.favourites.artists.findIndex(
       (trackId) => trackId === id,
     );
     if (index === -1) throw new NotFoundException();
-
-    return FavouritesService.favourites.artists.splice(index, 1)[0];
+    return this.favourites.artists.splice(index, 1)[0];
   }
 }
