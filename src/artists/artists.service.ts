@@ -1,20 +1,36 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  forwardRef,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateArtistDto } from './dto/create-artist.dto';
 import { v4 as uuidv4 } from 'uuid';
 import { ArtistEntity } from './entity/artist.entity';
 import { UpdateArtistDto } from './dto/update-artist.dto';
 import { TracksService } from '../tracks/tracks.service';
+import { FavouritesService } from '../favourites/favourites.service';
+import { AlbumsService } from '../albums/albums.service';
 
 @Injectable()
 export class ArtistsService {
-  public static artists: ArtistEntity[] = [];
+  constructor(
+    @Inject(forwardRef(() => FavouritesService))
+    private favouritesService: FavouritesService,
+    @Inject(forwardRef(() => AlbumsService))
+    private albumsService: AlbumsService,
+    @Inject(forwardRef(() => TracksService))
+    private tracksService: TracksService,
+  ) {}
+
+  public artists: ArtistEntity[] = [];
 
   getAll(): Array<ArtistEntity> {
-    return ArtistsService.artists;
+    return this.artists;
   }
 
   getOne(id: string): ArtistEntity {
-    const artist = ArtistsService.artists.find((user) => user.id === id);
+    const artist = this.artists.find((user) => user.id === id);
     if (!artist) throw new NotFoundException();
     return artist;
   }
@@ -22,13 +38,13 @@ export class ArtistsService {
   create(createUserDto: CreateArtistDto): ArtistEntity {
     const newArtist = new ArtistEntity({ id: uuidv4(), ...createUserDto });
 
-    ArtistsService.artists.push(newArtist);
+    this.artists.push(newArtist);
 
     return newArtist;
   }
 
-  update(id, updateArtistDto: UpdateArtistDto): ArtistEntity {
-    let updatedArtist = ArtistsService.artists.find((user) => user.id === id);
+  update(id: string, updateArtistDto: UpdateArtistDto): ArtistEntity {
+    let updatedArtist = this.artists.find((user) => user.id === id);
 
     if (!updatedArtist) throw new NotFoundException();
 
@@ -38,15 +54,19 @@ export class ArtistsService {
   }
 
   delete(id): ArtistEntity {
-    const index = ArtistsService.artists.findIndex((user) => user.id === id);
-
-    const trackIndex = TracksService.tracks.findIndex(
+    const index = this.artists.findIndex((user) => user.id === id);
+    const indexFavourites =
+      this.favouritesService.favourites.artists.indexOf(id);
+    const trackIndex = this.tracksService.tracks.findIndex(
       (track) => track.artistId === id,
     );
 
+    if (indexFavourites !== -1)
+      this.favouritesService.favourites.artists.splice(indexFavourites, 1);
     if (index === -1) throw new NotFoundException();
-    if (trackIndex !== -1) TracksService.tracks[trackIndex].artistId = null;
+    if (trackIndex !== -1)
+      this.tracksService.tracks[trackIndex].artistId = null;
 
-    return ArtistsService.artists.splice(index, 1)[0];
+    return this.artists.splice(index, 1)[0];
   }
 }
