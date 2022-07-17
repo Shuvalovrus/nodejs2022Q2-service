@@ -1,20 +1,34 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  forwardRef,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateAlbumDto } from './dto/create-album.dto';
 import { v4 as uuidv4 } from 'uuid';
 import { AlbumEntity } from './entity/album.entity';
 import { UpdateAlbumDto } from './dto/update-album.dto';
 import { TracksService } from '../tracks/tracks.service';
+import { FavouritesService } from '../favourites/favourites.service';
 
 @Injectable()
 export class AlbumsService {
-  public static albums: AlbumEntity[] = [];
+  constructor(
+    @Inject(forwardRef(() => FavouritesService))
+    private favouritesService: FavouritesService,
+
+    @Inject(forwardRef(() => TracksService))
+    private tracksService: TracksService,
+  ) {}
+
+  public albums: AlbumEntity[] = [];
 
   getAll(): Array<AlbumEntity> {
-    return AlbumsService.albums;
+    return this.albums;
   }
 
   getOne(id: string): AlbumEntity {
-    const album = AlbumsService.albums.find((album) => album.id === id);
+    const album = this.albums.find((album) => album.id === id);
     if (!album) throw new NotFoundException();
     return album;
   }
@@ -22,13 +36,13 @@ export class AlbumsService {
   create(createAlbumDto: CreateAlbumDto): AlbumEntity {
     const newAlbum = new AlbumEntity({ id: uuidv4(), ...createAlbumDto });
 
-    AlbumsService.albums.push(newAlbum);
+    this.albums.push(newAlbum);
 
     return newAlbum;
   }
 
   update(id, updateAlbumDto: UpdateAlbumDto): AlbumEntity {
-    let updatedAlbum = AlbumsService.albums.find((album) => album.id === id);
+    let updatedAlbum = this.albums.find((album) => album.id === id);
 
     if (!updatedAlbum) throw new NotFoundException();
 
@@ -38,15 +52,17 @@ export class AlbumsService {
   }
 
   delete(id: string): AlbumEntity {
-    const index = AlbumsService.albums.findIndex((user) => user.id === id);
-
-    const trackIndex = TracksService.tracks.findIndex(
+    const index = this.albums.findIndex((user) => user.id === id);
+    const favouriteIndex = this.favouritesService.favourites.albums.indexOf(id);
+    const trackIndex = this.tracksService.tracks.findIndex(
       (track) => track.albumId === id,
     );
 
+    if (favouriteIndex !== -1)
+      this.favouritesService.favourites.albums.splice(favouriteIndex, 1);
     if (index === -1) throw new NotFoundException();
-    if (trackIndex !== -1) TracksService.tracks[trackIndex].albumId = null;
+    if (trackIndex !== -1) this.tracksService.tracks[trackIndex].albumId = null;
 
-    return AlbumsService.albums.splice(index, 1)[0];
+    return this.albums.splice(index, 1)[0];
   }
 }
