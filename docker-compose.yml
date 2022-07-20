@@ -1,0 +1,19 @@
+version: '3'
+
+services:
+  node:
+    build: .
+    ports:
+      - ${PORT}:${PORT}
+    depends_on:
+      - postgres
+    environment:
+      - PORT=${PORT}
+  postgres:
+    build: ./database/
+    ports:
+      - "5000:5000"
+    environment:
+      POSTGRES_USER: 'Admin'
+      POSTGRES_PASSWORD: 'Admin'
+      POSTGRES_DB: 'postgres'
