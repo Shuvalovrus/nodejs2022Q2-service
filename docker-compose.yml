@@ -22,11 +22,11 @@ services:
     restart: unless-stopped
     build: ./database/
     ports:
-      - "5000:5000"
+      - ${DB_PORT}:${DB_PORT}
     environment:
-      POSTGRES_USER: 'Admin'
-      POSTGRES_PASSWORD: 'Admin'
-      POSTGRES_DB: 'postgres'
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     networks:
       - custom_bridge
     volumes:
