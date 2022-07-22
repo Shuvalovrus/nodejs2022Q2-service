@@ -13,6 +13,9 @@ services:
       - PORT=${PORT}
     networks:
       - custom_bridge
+    volumes:
+      - .:/usr/app
+      - /usr/app/node_modules
 
   postgres:
     container_name: app-db
