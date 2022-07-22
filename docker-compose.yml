@@ -2,6 +2,8 @@ version: '3'
 
 services:
   node:
+    container_name: app
+    restart: unless-stopped
     build: .
     ports:
       - ${PORT}:${PORT}
@@ -13,6 +15,8 @@ services:
       - custom_bridge
 
   postgres:
+    container_name: app-db
+    restart: unless-stopped
     build: ./database/
     ports:
       - "5000:5000"
