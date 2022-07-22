@@ -9,6 +9,9 @@ services:
       - postgres
     environment:
       - PORT=${PORT}
+    networks:
+      - custom_bridge
+
   postgres:
     build: ./database/
     ports:
@@ -17,3 +20,10 @@ services:
       POSTGRES_USER: 'Admin'
       POSTGRES_PASSWORD: 'Admin'
       POSTGRES_DB: 'postgres'
+    networks:
+      - custom_bridge
+
+networks:
+  custom_bridge:
+    driver: bridge
+
