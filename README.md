@@ -70,3 +70,14 @@ npm run format
 Press <kbd>F5</kbd> to debug.
 
 For more information, visit: https://code.visualstudio.com/docs/editor/debugging
+
+### Containerization
+
+_Must be installed Docker_
+
+Create container:
+
+```
+docker-compose up
+```
+After creating the container, the app and the db will run on the ports specified in the env
