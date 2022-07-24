@@ -31,7 +31,6 @@ services:
       - custom_bridge
     volumes:
       - ./database/data:/var/lib/postgresql/data
-      - ./logs:/var/lib/postgresql/data/log
 
 networks:
   custom_bridge:
