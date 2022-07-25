@@ -4,57 +4,56 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
-import { v4 as uuidv4 } from 'uuid';
 import { UserEntity } from './entity/user.entity';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class UsersService {
-  private users: UserEntity[] = [];
+  constructor(
+    @InjectRepository(UserEntity)
+    private userRepo: Repository<UserEntity>,
+  ) {}
 
-  getAll(): Array<UserEntity> {
-    return this.users;
+  async getAll() {
+    const users = await this.userRepo.find();
+
+    return users.map((user) => user.toResponse());
   }
 
-  getOne(id: string): UserEntity {
-    const user = this.users.find((user) => user.id === id);
-    if (!user) throw new NotFoundException();
-    return user;
+  async getOne(userId: string) {
+    const user = await this.userRepo.findOne({ where: { id: userId } });
+
+    if (!user) throw new NotFoundException('User not found');
+
+    return user.toResponse();
   }
 
-  create(createUserDto: CreateUserDto): UserEntity {
-    const newUser = new UserEntity({
-      id: uuidv4(),
-      ...createUserDto,
-      version: 1,
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-    });
+  async delete(userId) {
+    const deletedUser = await this.getOne(userId);
 
-    this.users.push(newUser);
-
-    return newUser;
+    if (deletedUser) return await this.userRepo.delete(userId);
   }
 
-  update(id, updateUserDto: UpdateUserDto): UserEntity {
-    const updatedUser = this.users.find((user) => user.id === id);
+  async update(userId, updateUserDto: UpdateUserDto) {
+    const updatedUser = await this.userRepo.findOne({ where: { id: userId } });
 
-    if (!updatedUser) throw new NotFoundException();
+    if (!updatedUser) throw new NotFoundException('User not found');
+
     if (updatedUser.password !== updateUserDto.oldPassword)
       throw new ForbiddenException();
 
-    updatedUser.version++;
-    updatedUser.password = updateUserDto.newPassword;
-    updatedUser.updatedAt = Date.now();
+    await this.userRepo.update(userId, {
+      password: updateUserDto.newPassword,
+    });
 
-    return updatedUser;
+    return await this.getOne(userId);
   }
 
-  delete(id): UserEntity {
-    const index = this.users.findIndex((user) => user.id === id);
+  async create(createUserDto: CreateUserDto) {
+    const createdUser = this.userRepo.create(createUserDto);
 
-    if (index === -1) throw new NotFoundException();
-
-    return this.users.splice(index, 1)[0];
+    return (await this.userRepo.save(createdUser)).toResponse();
   }
 }

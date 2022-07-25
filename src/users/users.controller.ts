@@ -12,7 +12,6 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { UserEntity } from './entity/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 
@@ -22,19 +21,39 @@ export class UsersController {
   constructor(private readonly usersServices: UsersService) {}
 
   @Get()
-  getUsers(): Array<UserEntity> {
+  getUsers(): Promise<
+    {
+      createdAt: number;
+      id: string;
+      login: string;
+      version: number;
+      updatedAt: number;
+    }[]
+  > {
     return this.usersServices.getAll();
   }
 
   @Get(':id')
   getUser(
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
-  ): UserEntity {
+  ): Promise<{
+    createdAt: number;
+    id: string;
+    login: string;
+    version: number;
+    updatedAt: number;
+  }> {
     return this.usersServices.getOne(id);
   }
 
   @Post()
-  createUser(@Body() createUserDto: CreateUserDto): UserEntity {
+  createUser(@Body() createUserDto: CreateUserDto): Promise<{
+    createdAt: number;
+    id: string;
+    login: string;
+    version: number;
+    updatedAt: number;
+  }> {
     return this.usersServices.create(createUserDto);
   }
 
@@ -42,7 +61,13 @@ export class UsersController {
   updateUser(
     @Body() updateUserDto: UpdateUserDto,
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
-  ): UserEntity {
+  ): Promise<{
+    createdAt: number;
+    id: string;
+    login: string;
+    version: number;
+    updatedAt: number;
+  }> {
     return this.usersServices.update(id, updateUserDto);
   }
 
