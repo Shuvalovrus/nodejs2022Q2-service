@@ -19,36 +19,36 @@ import { UpdateTrackDto } from './dto/update-track.dto';
 @UseInterceptors(ClassSerializerInterceptor)
 @Controller('track')
 export class TracksController {
-  constructor(private readonly usersServices: TracksService) {}
+  constructor(private readonly tracksService: TracksService) {}
 
   @Get()
-  getTracks(): Array<TrackEntity> {
-    return this.usersServices.getAll();
+  getTracks(): Promise<Array<TrackEntity>> {
+    return this.tracksService.getAll();
   }
 
   @Get(':id')
   getTrack(
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
-  ): TrackEntity {
-    return this.usersServices.getOne(id);
+  ): Promise<TrackEntity> {
+    return this.tracksService.getOne(id);
   }
 
   @Post()
-  createTrack(@Body() createUserDto: CreateTrackDto): TrackEntity {
-    return this.usersServices.create(createUserDto);
+  createTrack(@Body() createTrackDto: CreateTrackDto): Promise<TrackEntity> {
+    return this.tracksService.create(createTrackDto);
   }
 
   @Put(':id')
   updateTrack(
     @Body() updateUserDto: UpdateTrackDto,
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
-  ): TrackEntity {
-    return this.usersServices.update(id, updateUserDto);
+  ): Promise<TrackEntity> {
+    return this.tracksService.update(id, updateUserDto);
   }
 
   @Delete(':id')
   @HttpCode(204)
   deleteTrack(@Param('id', new ParseUUIDPipe({ version: '4' })) id: string) {
-    return this.usersServices.delete(id);
+    return this.tracksService.delete(id);
   }
 }

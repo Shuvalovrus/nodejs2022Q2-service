@@ -5,58 +5,56 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { CreateTrackDto } from './dto/create-track.dto';
-import { v4 as uuidv4 } from 'uuid';
 import { TrackEntity } from './entity/track.entity';
 import { UpdateTrackDto } from './dto/update-track.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { FavouritesService } from '../favourites/favourites.service';
 
 @Injectable()
 export class TracksService {
   constructor(
+    @InjectRepository(TrackEntity)
+    private trackRepo: Repository<TrackEntity>,
     @Inject(forwardRef(() => FavouritesService))
     private favouritesService: FavouritesService,
   ) {}
 
-  public tracks: TrackEntity[] = [];
-
-  getAll(): Array<TrackEntity> {
-    return this.tracks;
+  async getAll(): Promise<Array<TrackEntity>> {
+    return await this.trackRepo.find();
   }
 
-  getOne(id: string): TrackEntity {
-    const track = this.tracks.find((track) => track.id === id);
-    if (!track) throw new NotFoundException();
+  async getOne(trackId: string): Promise<TrackEntity> {
+    const track = await this.trackRepo.findOne({ where: { id: trackId } });
+
+    if (!track) throw new NotFoundException('Track not found');
+
     return track;
   }
 
-  create(createTrackDto: CreateTrackDto): TrackEntity {
-    const newTrack = new TrackEntity({ id: uuidv4(), ...createTrackDto });
+  async create(createTrackDto: CreateTrackDto): Promise<TrackEntity> {
+    const createdTrack = this.trackRepo.create(createTrackDto);
 
-    this.tracks.push(newTrack);
-
-    return newTrack;
+    return await this.trackRepo.save(createdTrack);
   }
 
-  update(id, updateTrackDto: UpdateTrackDto): TrackEntity {
-    let updatedTrack = this.tracks.find((user) => user.id === id);
+  async update(trackId, updateTrackDto: UpdateTrackDto): Promise<TrackEntity> {
+    const updatedTrack = await this.getOne(trackId);
 
-    if (!updatedTrack) throw new NotFoundException();
-
-    updatedTrack = Object.assign(updatedTrack, updateTrackDto);
-
-    return updatedTrack;
+    return await this.trackRepo.save(
+      Object.assign(updatedTrack, updateTrackDto),
+    );
   }
 
-  delete(id): TrackEntity {
-    const index = this.tracks.findIndex((user) => user.id === id);
-    const favouritesIndex =
-      this.favouritesService.favourites.tracks.indexOf(id);
+  async delete(trackId): Promise<TrackEntity> {
+    const favourites = await this.favouritesService.getFavourites();
+    const deletedTrack = await this.getOne(trackId);
 
-    if (favouritesIndex !== -1)
-      this.favouritesService.favourites.tracks.splice(favouritesIndex, 1);
+    if (favourites.tracks.includes(trackId))
+      await this.favouritesService.deleteTrack(trackId);
 
-    if (index === -1) throw new NotFoundException();
+    await this.trackRepo.delete(trackId);
 
-    return this.tracks.splice(index, 1)[0];
+    return deletedTrack;
   }
 }
