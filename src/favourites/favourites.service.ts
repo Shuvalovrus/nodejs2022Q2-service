@@ -5,99 +5,124 @@ import {
   NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
-import { Favorites } from './dto/favourites.dto';
-import { AlbumsService } from '../albums/albums.service';
-import { ArtistsService } from '../artists/artists.service';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { FavoritesEntity } from './entity/favourite.entity';
 import { TracksService } from '../tracks/tracks.service';
+import { ArtistsService } from '../artists/artists.service';
+import { AlbumsService } from '../albums/albums.service';
 
 @Injectable()
 export class FavouritesService {
   constructor(
-    @Inject(forwardRef(() => AlbumsService))
-    private albumsServices: AlbumsService,
-    @Inject(forwardRef(() => ArtistsService))
-    private artistsServices: ArtistsService,
+    @InjectRepository(FavoritesEntity)
+    private favouritesRepo: Repository<FavoritesEntity>,
     @Inject(forwardRef(() => TracksService))
-    private tracksServices: TracksService,
+    private readonly tracksService: TracksService,
+    @Inject(forwardRef(() => ArtistsService))
+    private readonly artistsService: ArtistsService,
+    @Inject(forwardRef(() => AlbumsService))
+    private readonly albumsService: AlbumsService,
   ) {}
 
-  public favourites: Favorites = {
-    artists: [],
-    albums: [],
-    tracks: [],
-  };
+  async getAll() {
+    const favourites =
+      (await this.getFavourites()) === null
+        ? await this.favouritesRepo.save({
+            id: 1,
+            artists: [],
+            albums: [],
+            tracks: [],
+          })
+        : await this.getFavourites();
 
-  getAll() {
     return {
-      artists: this.favourites.artists.map((id) => {
-        if (this.artistsServices.artists.find((item) => item.id === id)) {
-          return this.artistsServices.getOne(id);
-        }
-      }),
-      albums: this.favourites.albums.map((id) => {
-        if (this.albumsServices.albums.find((item) => item.id === id)) {
-          return this.albumsServices.getOne(id);
-        }
-      }),
-      tracks: this.favourites.tracks.map((id) => {
-        if (this.tracksServices.tracks.find((item) => item.id === id)) {
-          return this.tracksServices.getOne(id);
-        }
-      }),
+      artists: await Promise.all(
+        favourites.artists.map(async (item) => {
+          return await this.artistsService.getOne(item);
+        }),
+      ),
+      albums: await Promise.all(
+        favourites.albums.map(async (item) => {
+          return await this.albumsService.getOne(item);
+        }),
+      ),
+      tracks: await Promise.all(
+        favourites.tracks.map(async (item) => {
+          return await this.tracksService.getOne(item);
+        }),
+      ),
     };
   }
 
-  addTrack(id) {
-    const track = this.tracksServices.tracks.find((item) => item.id === id);
+  async addTrack(id) {
+    const favourites = await this.getFavourites();
+    const tracks = await this.tracksService.getAll();
+    const track = tracks.find((item) => item.id === id);
 
     if (!track) throw new UnprocessableEntityException();
 
-    this.favourites.tracks.push(id);
-
-    return track;
+    favourites.tracks.push(id);
+    return this.favouritesRepo.save(favourites);
   }
 
-  deleteTrack(id) {
-    const index = this.favourites.tracks.findIndex((trackId) => trackId === id);
+  async deleteTrack(id) {
+    const favourites = await this.getFavourites();
+    const index = favourites.tracks.indexOf(id);
 
     if (index === -1) throw new NotFoundException();
 
-    return this.favourites.tracks.splice(index, 1);
+    favourites.tracks.splice(index, 1);
+
+    return this.favouritesRepo.save(favourites);
   }
 
-  addAlbum(id) {
-    const album = this.albumsServices.albums.find((item) => item.id === id);
+  async addAlbum(id) {
+    const favourites = await this.getFavourites();
+    const albums = await this.albumsService.getAll();
+    const album = albums.find((item) => item.id === id);
 
     if (!album) throw new UnprocessableEntityException();
 
-    this.favourites.albums.push(id);
-
-    return album;
+    favourites.albums.push(id);
+    return this.favouritesRepo.save(favourites);
   }
 
-  deleteAlbum(id) {
-    const index = this.favourites.albums.findIndex((trackId) => trackId === id);
+  async deleteAlbum(id) {
+    const favourites = await this.getFavourites();
+    const index = favourites.albums.indexOf(id);
 
     if (index === -1) throw new NotFoundException();
 
-    return this.favourites.albums.splice(index, 1)[0];
+    favourites.albums.splice(index, 1);
+
+    return this.favouritesRepo.save(favourites);
   }
 
-  addArtist(id) {
-    const artist = this.artistsServices.artists.find((item) => item.id === id);
+  async addArtist(id) {
+    const favourites = await this.getFavourites();
+    const artists = await this.artistsService.getAll();
+    const artist = artists.find((item) => item.id === id);
 
     if (!artist) throw new UnprocessableEntityException();
 
-    this.favourites.artists.push(id);
+    favourites.artists.push(id);
 
-    return artist;
+    return this.favouritesRepo.save(favourites);
   }
 
-  deleteArtist(id) {
-    const index = this.favourites.artists.findIndex(
-      (trackId) => trackId === id,
-    );
+  async deleteArtist(id) {
+    const favourites = await this.getFavourites();
+    const index = favourites.artists.indexOf(id);
+
     if (index === -1) throw new NotFoundException();
-    return this.favourites.artists.splice(index, 1)[0];
+
+    favourites.artists.splice(index, 1);
+
+    return this.favouritesRepo.save(favourites);
+  }
+
+  async getFavourites() {
+    return await this.favouritesRepo.findOne({ where: { id: 1 } });
   }
 }
