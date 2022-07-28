@@ -22,19 +22,19 @@ export class ArtistsController {
   constructor(private readonly artistsServices: ArtistsService) {}
 
   @Get()
-  getArtists(): Array<ArtistEntity> {
+  getArtists(): Promise<Array<ArtistEntity>> {
     return this.artistsServices.getAll();
   }
 
   @Get(':id')
   getArtist(
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
-  ): ArtistEntity {
+  ): Promise<ArtistEntity> {
     return this.artistsServices.getOne(id);
   }
 
   @Post()
-  createArtist(@Body() createUserDto: CreateArtistDto): ArtistEntity {
+  createArtist(@Body() createUserDto: CreateArtistDto): Promise<ArtistEntity> {
     return this.artistsServices.create(createUserDto);
   }
 
@@ -42,7 +42,7 @@ export class ArtistsController {
   updateArtist(
     @Body() updateUserDto: UpdateArtistDto,
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
-  ): ArtistEntity {
+  ): Promise<ArtistEntity> {
     return this.artistsServices.update(id, updateUserDto);
   }
 
