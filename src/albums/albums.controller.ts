@@ -22,19 +22,19 @@ export class AlbumsController {
   constructor(private readonly albumsServices: AlbumsService) {}
 
   @Get()
-  getArtists(): Array<AlbumEntity> {
+  getArtists(): Promise<Array<AlbumEntity>> {
     return this.albumsServices.getAll();
   }
 
   @Get(':id')
   getAlbum(
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
-  ): AlbumEntity {
+  ): Promise<AlbumEntity> {
     return this.albumsServices.getOne(id);
   }
 
   @Post()
-  createAlbum(@Body() createAlbumDto: CreateAlbumDto): AlbumEntity {
+  createAlbum(@Body() createAlbumDto: CreateAlbumDto): Promise<AlbumEntity> {
     return this.albumsServices.create(createAlbumDto);
   }
 
@@ -42,7 +42,7 @@ export class AlbumsController {
   updateAlbum(
     @Body() updateAlbumDto: UpdateAlbumDto,
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
-  ): AlbumEntity {
+  ): Promise<AlbumEntity> {
     return this.albumsServices.update(id, updateAlbumDto);
   }
 
