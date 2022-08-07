@@ -20,7 +20,7 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   fs.writeFileSync('./doc/api.yaml', JSON.stringify(document));
 
-  SwaggerModule.setup('api', app, document);
+  SwaggerModule.setup('doc', app, document);
 
   await app.listen(port);
   console.log(`App is running on port: ${port}`);
