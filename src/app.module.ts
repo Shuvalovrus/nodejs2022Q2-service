@@ -7,9 +7,13 @@ import { FavouritesModule } from './favourites/favourites.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import configService from '../ormconfig';
 import { ConfigModule } from '@nestjs/config';
+import { AuthModule } from './auth/auth.module';
+import { APP_GUARD } from '@nestjs/core';
+import { JwtAuthGuard } from './auth/jwt-auth.guard';
 
 @Module({
   imports: [
+    AuthModule,
     UsersModule,
     TracksModule,
     ArtistsModule,
@@ -19,6 +23,11 @@ import { ConfigModule } from '@nestjs/config';
     TypeOrmModule.forRoot(configService),
   ],
   controllers: [],
-  providers: [],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
+    },
+  ],
 })
 export class AppModule {}
