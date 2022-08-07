@@ -13,7 +13,7 @@ export default {
   synchronize: false,
   entities: ['dist/src/**/*.entity.js'],
   migrations: ['dist/src/migration/*.{js,ts}'],
-  migrationsRun: false,
+  migrationsRun: true,
   cli: {
     migrationsDir: 'src/migrations',
   },
