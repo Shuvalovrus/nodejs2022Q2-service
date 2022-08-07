@@ -42,11 +42,17 @@ export class UsersService {
 
     if (!updatedUser) throw new NotFoundException('User not found');
 
-    if (updatedUser.password !== updateUserDto.oldPassword)
-      throw new ForbiddenException();
+    const isMatch = await bcrypt.compare(
+      updateUserDto.oldPassword,
+      updatedUser.password,
+    );
+
+    const hashPassword = await bcrypt.hash(updateUserDto.newPassword, 10);
+
+    if (!isMatch) throw new ForbiddenException();
 
     await this.userRepo.update(userId, {
-      password: updateUserDto.newPassword,
+      password: hashPassword,
     });
 
     return await this.getOne(userId);
