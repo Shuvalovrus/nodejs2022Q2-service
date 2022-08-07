@@ -102,3 +102,6 @@ Create container:
 docker-compose up
 ```
 After creating the container, the app and the db will run on the ports specified in the env
+
+
+

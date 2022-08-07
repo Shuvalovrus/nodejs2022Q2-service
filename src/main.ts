@@ -4,12 +4,28 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
 import 'dotenv/config';
 import * as fs from 'fs';
+import { LoggingService } from './logger/logger.sevrice';
+import { CustomExceptionFilter } from './logger/exceptionFilter.service';
 
 async function bootstrap() {
   const port = process.env.PORT || 4000;
 
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    logger: false,
+  });
+
+  app.useGlobalFilters(new CustomExceptionFilter(app.get(LoggingService)));
+  app.useLogger(app.get(LoggingService));
   app.useGlobalPipes(new ValidationPipe());
+
+  process.on('unhandledRejection', () => {
+    process.stdout.write('Unhandled Rejection');
+    process.exit(1);
+  });
+  process.on('uncaughtException', () => {
+    process.stdout.write('Uncaught Exception');
+    process.exit(1);
+  });
 
   const config = new DocumentBuilder()
     .setTitle('Home Library Service')
