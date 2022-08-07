@@ -27,6 +27,9 @@ export class UserEntity {
   @UpdateDateColumn()
   updatedAt: number;
 
+  @Column({ nullable: true })
+  refreshToken: string;
+
   toResponse() {
     const { id, login, version, createdAt, updatedAt } = this;
     return { id, login, version, createdAt: +createdAt, updatedAt: +updatedAt };
